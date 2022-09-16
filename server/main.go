@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/jomei/notionapi"
@@ -26,41 +27,29 @@ func main() {
 	token := os.Getenv("NOTION_INTEGRATION_TOKEN")
 	client := notionapi.NewClient(notionapi.Token(token))
 
-	resp, err := client.Database.Query(context.Background(), wordbookDatabase, &notionapi.DatabaseQueryRequest{
-		Filter: notionapi.PropertyFilter{
-			RichText: &notionapi.TextFilterCondition{Equals: "hoge"},
-			Property: "title",
+	text := "hello"
+
+	_, err := client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
+		Parent: notionapi.Parent{
+			Type:       notionapi.ParentTypeDatabaseID,
+			DatabaseID: wordbookDatabase,
+		},
+		Properties: notionapi.Properties{
+			wordbookDatabaseColumnIDs.word: notionapi.TitleProperty{
+				Title: []notionapi.RichText{
+					{Text: &notionapi.Text{Content: text}},
+				},
+			},
+			wordbookDatabaseColumnIDs.sourceUrl: notionapi.URLProperty{
+				URL: "https://google.com",
+			},
+			wordbookDatabaseColumnIDs.wikipediaUrl: notionapi.URLProperty{
+				URL: fmt.Sprintf("https://ja.wikipedia.org/w/index.php?search=%s&ns0=1", url.QueryEscape(text)),
+			},
 		},
 	})
 
 	if err != nil {
 		panic(err)
 	}
-
-	idTextColumns := map[string]string{}
-	for _, v := range resp.Results[0].Properties {
-		id, text := mustStringNotionProperty(v)
-		idTextColumns[id] = text
-	}
-
-	fmt.Println(fmt.Sprintf("%s, %s, %s",
-		idTextColumns[wordbookDatabaseColumnIDs.word],
-		idTextColumns[wordbookDatabaseColumnIDs.sourceUrl],
-		idTextColumns[wordbookDatabaseColumnIDs.wikipediaUrl],
-	))
-
-}
-
-func mustStringNotionProperty(p notionapi.Property) (id string, text string) {
-	switch p.(type) {
-	case *notionapi.TitleProperty:
-		title := p.(*notionapi.TitleProperty)
-		id, text = title.ID.String(), title.Title[0].PlainText
-	case *notionapi.URLProperty:
-		url := p.(*notionapi.URLProperty)
-		id, text = url.ID.String(), url.URL
-	default:
-		panic("Undefined property detected.")
-	}
-	return id, text
 }
