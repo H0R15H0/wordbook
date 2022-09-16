@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jomei/notionapi"
 )
@@ -29,14 +31,15 @@ var (
 	client = notionapi.NewClient(notionapi.Token(token))
 )
 
-type FetchedEvent struct {
+type requestBody struct {
 	Text string `json:"text"`
 }
 
-func HandleRequest(ctx context.Context, e FetchedEvent) {
-	text := e.Text
+func HandleRequest(ctx context.Context, e events.LambdaFunctionURLRequest) {
+	var r requestBody
+	json.Unmarshal([]byte(e.Body), &r)
 
-	_, err := client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
+	_, err := client.Page.Create(ctx, &notionapi.PageCreateRequest{
 		Parent: notionapi.Parent{
 			Type:       notionapi.ParentTypeDatabaseID,
 			DatabaseID: wordbookDatabase,
@@ -44,20 +47,20 @@ func HandleRequest(ctx context.Context, e FetchedEvent) {
 		Properties: notionapi.Properties{
 			wordbookDatabaseColumnIDs.word: notionapi.TitleProperty{
 				Title: []notionapi.RichText{
-					{Text: &notionapi.Text{Content: text}},
+					{Text: &notionapi.Text{Content: r.Text}},
 				},
 			},
 			wordbookDatabaseColumnIDs.sourceUrl: notionapi.URLProperty{
 				URL: "https://google.com",
 			},
 			wordbookDatabaseColumnIDs.wikipediaUrl: notionapi.URLProperty{
-				URL: fmt.Sprintf("https://ja.wikipedia.org/w/index.php?search=%s&ns0=1", url.QueryEscape(text)),
+				URL: fmt.Sprintf("https://ja.wikipedia.org/w/index.php?search=%s&ns0=1", url.QueryEscape(r.Text)),
 			},
 		},
 	})
 
 	if err != nil {
-		log.Println("text: ", text)
+		log.Println("text: ", r.Text)
 		log.Println(err)
 	}
 }

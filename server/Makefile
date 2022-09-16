@@ -27,6 +27,11 @@ server: ## run server
 	go run main.go
 init: ## initialize environment
 	go mod tidy
+build: main.go ## build for deployment
+	. .env.sh
+	GOOS=linux go build main.go
+	zip function.zip main
+	rm main
 
 ## Help:
 help: ## Show this help.
