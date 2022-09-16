@@ -4,7 +4,7 @@ const url = ""
 chrome.runtime.onMessage.addListener((request) => {
   switch (request.name)  {
     case "wordbook":
-      const selection = window.getSelection()
+      const selectedText = window.getSelection().toString()
       fetch(url, {
         method: 'POST',
         mode: 'no-cors',
@@ -12,8 +12,8 @@ chrome.runtime.onMessage.addListener((request) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: selection.toString(),
-          source_url: window.location.toString()
+          text: selectedText,
+          source_url: window.location.toString() + "#:~:text=" + selectedText
         }),
       })
       .then(() => {
