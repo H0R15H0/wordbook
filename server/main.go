@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jomei/notionapi"
 )
 
@@ -13,21 +15,26 @@ const (
 	wordbookDatabase = "e1a6f31ab3724ca6bc7aa23d9985e4b9"
 )
 
-var wordbookDatabaseColumnIDs = struct {
-	word         string
-	sourceUrl    string
-	wikipediaUrl string
-}{
-	"title",
-	"u%3Fqn",
-	"U%3BeC",
+var (
+	wordbookDatabaseColumnIDs = struct {
+		word         string
+		sourceUrl    string
+		wikipediaUrl string
+	}{
+		"title",
+		"u%3Fqn",
+		"U%3BeC",
+	}
+	token  = os.Getenv("NOTION_INTEGRATION_TOKEN")
+	client = notionapi.NewClient(notionapi.Token(token))
+)
+
+type FetchedEvent struct {
+	Text string `json:"text"`
 }
 
-func main() {
-	token := os.Getenv("NOTION_INTEGRATION_TOKEN")
-	client := notionapi.NewClient(notionapi.Token(token))
-
-	text := "hello"
+func HandleRequest(ctx context.Context, e FetchedEvent) {
+	text := e.Text
 
 	_, err := client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
 		Parent: notionapi.Parent{
@@ -50,6 +57,11 @@ func main() {
 	})
 
 	if err != nil {
-		panic(err)
+		log.Println("text: ", text)
+		log.Println(err)
 	}
+}
+
+func main() {
+	lambda.Start(HandleRequest)
 }
