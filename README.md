@@ -11,3 +11,13 @@ git clone git@github.com:H0R15H0/wordbook.git
 ```
 2. Paste lambda functions URL on `extension/subscriber.js:L2`
 3. Upload `extension` folder to chrome://extensions/
+
+# Deployment
+
+## Server
+
+1. Build
+```bash
+make build
+```
+2. Upload `function.zip` to AWS Lambda.
