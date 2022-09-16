@@ -32,7 +32,8 @@ var (
 )
 
 type requestBody struct {
-	Text string `json:"text"`
+	Text      string `json:"text"`
+	SourceURL string `json:"source_url"`
 }
 
 func HandleRequest(ctx context.Context, e events.LambdaFunctionURLRequest) {
@@ -51,7 +52,7 @@ func HandleRequest(ctx context.Context, e events.LambdaFunctionURLRequest) {
 				},
 			},
 			wordbookDatabaseColumnIDs.sourceUrl: notionapi.URLProperty{
-				URL: "https://google.com",
+				URL: r.SourceURL,
 			},
 			wordbookDatabaseColumnIDs.wikipediaUrl: notionapi.URLProperty{
 				URL: fmt.Sprintf("https://ja.wikipedia.org/w/index.php?search=%s&ns0=1", url.QueryEscape(r.Text)),
