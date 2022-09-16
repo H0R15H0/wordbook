@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "単語帳"
+  },
+  "extTabText": {
+    "message": "単語帳に登録する"
+  },
+  "extDescription": {
+    "message": "ブックマークしておきたい単語を登録することができます。"
+  }
+}
